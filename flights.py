@@ -1,30 +1,34 @@
 #from selenium.webdriver.chrome.service import Service as ChromeService
 #from webdriver_manager.chrome import ChromeDriverManager
 from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
+import pandas as pd
 import keyring
+import requests
 
 from datetime import datetime, timezone
 from dateutil.relativedelta import relativedelta
 
-#service=ChromeService(ChromeDriverManager().install())
+driver = webdriver.Chrome(ChromeDriverManager().install())
 
 start = datetime.now()
 end = start + relativedelta(days=1)
-driver = webdriver.Chrome()
 driver.get('https://gate.finnair.com/vpn/index.html')
 driver.implicitly_wait(1.0)
 driver.find_element(By.ID,'login').send_keys('AY29782')
-driver.implicitly_wait(0.5)
+driver.implicitly_wait(1.0)
 driver.find_element(By.ID,'loginBtn').click()
 driver.implicitly_wait(1.0)
 driver.find_element(By.ID,'passwd').send_keys(keyring.get_password("finnair", "AY29782"))
-driver.implicitly_wait(0.5)
+driver.implicitly_wait(1.0)
 driver.find_element(By.ID,'loginBtn').click()
 input("Press any key to continue after authentication")
-driver.get('https://gate.finnair.com/cvpn/http/skyway.finnair.fi/FinnairWDT')
-driver.get('https://gate.finnair.com/cvpn/http/skyway.finnair.fi/FinnairWDT/StartApplication.aspx?group=appgroup-1&application=app-3')
+s = requests.Session()
+s.cookies.update({c['name']: c['value'] for c in driver.get_cookies()})
+r = s.get('https://gate.finnair.com/cvpn/http/skyway.finnair.fi/FinnairWDT')
+r = s.get('https://gate.finnair.com/cvpn/http/skyway.finnair.fi/FinnairWDT/StartApplication.aspx?group=appgroup-1&application=app-3')
 Select(driver.find_element(By.NAME,'start_day')).select_by_index(start.day)
 Select(driver.find_element(By.NAME,'start_month')).select_by_index(start.month)
 Select(driver.find_element(By.NAME,'start_year')).select_by_value(str(start.year))
